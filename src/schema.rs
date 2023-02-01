@@ -2,7 +2,7 @@
 
 diesel::table! {
     blog_posts (id) {
-        id -> Nullable<Int4>,
+        id -> Int4,
         title -> Varchar,
         body -> Text,
         published -> Nullable<Bool>,
