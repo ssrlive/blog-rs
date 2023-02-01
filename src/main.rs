@@ -6,6 +6,12 @@ use rocket::{
     serde::{json::Json, Deserialize, Serialize},
     State,
 };
+use rocket_sync_db_pools::database;
+
+mod schema;
+
+#[database("postgres_database")]
+pub struct DbConn(diesel::PgConnection);
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
@@ -83,6 +89,7 @@ fn create_blog_post(blog_post: Json<BlogPost>) -> Json<BlogPost> {
 async fn main() {
     let _ = rocket::build()
         .attach(AdHoc::config::<Config>())
+        .attach(DbConn::fairing())
         .mount("/", routes![index, get_config])
         .mount(
             "/blog-posts",
