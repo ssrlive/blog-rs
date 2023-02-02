@@ -25,15 +25,6 @@ struct BlogPost {
     published: Option<bool>,
 }
 
-#[derive(Debug, Clone, Insertable, AsChangeset, Serialize, Deserialize)]
-#[serde(crate = "rocket::serde")]
-#[diesel(table_name = schema::blog_posts)]
-struct NewBlogPost {
-    title: String,
-    body: String,
-}
-
-
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(crate = "rocket::serde")]
 struct Config {
@@ -88,9 +79,20 @@ async fn get_all_blog_posts(conn: DbConn) -> Json<Vec<BlogPost>> {
 }
 
 #[post("/", data = "<blog_post>")]
-async fn create_blog_post(conn: DbConn, blog_post: Json<NewBlogPost>) -> Json<BlogPost> {
+async fn create_blog_post(conn: DbConn, blog_post: Json<BlogPost>) -> Json<BlogPost> {
+    #[derive(Insertable)]
+    #[diesel(table_name = schema::blog_posts)]
+    struct NewBlogPost {
+        title: String,
+        body: String,
+    }
+
     conn.run(|c| {
         let v = blog_post.into_inner();
+        let v = NewBlogPost {
+            title: v.title,
+            body: v.body,
+        };
         diesel::insert_into(schema::blog_posts::table)
             .values(&v)
             .get_result(c)
